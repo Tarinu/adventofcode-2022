@@ -4,6 +4,7 @@ use std::{
     path::PathBuf,
 };
 
+#[derive(Clone)]
 enum Hand {
     Rock = 1,
     Paper = 2,
@@ -21,18 +22,53 @@ impl From<&str> for Hand {
     }
 }
 
+impl Hand {
+    fn get_winning_hand(hand: &Hand) -> Hand {
+        match hand {
+            Hand::Rock => Hand::Paper,
+            Hand::Paper => Hand::Scissors,
+            Hand::Scissors => Hand::Rock,
+        }
+    }
+
+    fn get_losing_hand(hand: &Hand) -> Hand {
+        match hand {
+            Hand::Rock => Hand::Scissors,
+            Hand::Paper => Hand::Rock,
+            Hand::Scissors => Hand::Paper,
+        }
+    }
+
+    fn get_drawing_hand(hand: &Hand) -> Hand {
+        hand.clone()
+    }
+}
+
 struct Turn {
     player: Hand,
     opponent: Hand,
 }
 
-impl From<String> for Turn {
-    fn from(input: String) -> Self {
+impl From<&str> for Turn {
+    fn from(input: &str) -> Self {
         let mut parts = input.split_whitespace();
 
         Self {
             opponent: parts.next().unwrap().into(),
             player: parts.next().unwrap().into(),
+        }
+    }
+}
+
+impl From<Turnv2> for Turn {
+    fn from(turn: Turnv2) -> Self {
+        Self {
+            player: match turn.result {
+                Result::Win => Hand::get_winning_hand(&turn.opponent),
+                Result::Lose => Hand::get_losing_hand(&turn.opponent),
+                Result::Draw => Hand::get_drawing_hand(&turn.opponent),
+            },
+            opponent: turn.opponent,
         }
     }
 }
@@ -52,6 +88,17 @@ enum Result {
     Win = 6,
     Lose = 0,
     Draw = 3,
+}
+
+impl From<&str> for Result {
+    fn from(result: &str) -> Self {
+        match result {
+            "X" => Self::Lose,
+            "Y" => Self::Draw,
+            "Z" => Self::Win,
+            _ => panic!("Unknown symbol {}", result),
+        }
+    }
 }
 
 impl From<&Turn> for Result {
@@ -76,6 +123,22 @@ impl From<&Turn> for Result {
     }
 }
 
+struct Turnv2 {
+    opponent: Hand,
+    result: Result,
+}
+
+impl From<&str> for Turnv2 {
+    fn from(input: &str) -> Self {
+        let mut parts = input.split_whitespace();
+
+        Self {
+            opponent: parts.next().unwrap().into(),
+            result: parts.next().unwrap().into(),
+        }
+    }
+}
+
 fn main() {
     let mut project_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     project_root.push("input.txt");
@@ -83,13 +146,21 @@ fn main() {
     let input = BufReader::new(input);
 
     let mut turns = Vec::new();
+    let mut correct_turns = Vec::new();
 
     for line in input.lines().map(|l| l.unwrap()) {
-        let turn: Turn = line.into();
+        let turn: Turn = <String as AsRef<str>>::as_ref(&line).into();
         turns.push(turn);
+
+        let correct_turn: Turnv2 = <String as AsRef<str>>::as_ref(&line).into();
+        correct_turns.push(Turn::from(correct_turn));
     }
 
     let score: u32 = turns.iter().map(|turn| turn.get_score()).sum();
 
-    println!("{}", score);
+    println!("Initial score: {}", score);
+
+    let correct_score: u32 = correct_turns.iter().map(|turn| turn.get_score()).sum();
+
+    println!("Correct score: {}", correct_score);
 }
