@@ -23,6 +23,7 @@ fn main() {
     let reader = read_input(env!("CARGO_CRATE_NAME"));
     let lines = read_lines(reader);
 
+    let mut fully_overlaps = 0;
     let mut overlaps = 0;
 
     for line in lines {
@@ -31,9 +32,14 @@ fn main() {
         let second = Section::from(sections.next().unwrap());
 
         if first.set.is_subset(&second.set) || first.set.is_superset(&second.set) {
+            fully_overlaps += 1;
+        }
+
+        if first.set.intersection(&second.set).count() > 0 {
             overlaps += 1;
         }
     }
 
-    println!("Overlaps: {}", overlaps);
+    println!("Fully overlaps: {}", fully_overlaps);
+    println!("Partially overlaps: {}", overlaps);
 }
