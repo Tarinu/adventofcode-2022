@@ -63,6 +63,7 @@ fn main() {
     let mut lines = read_lines(reader);
 
     let mut stacks = initialize_stacks(&mut lines);
+    let mut stacks2 = stacks.clone();
 
     for line in lines {
         let change: Move = line.into();
@@ -71,6 +72,10 @@ fn main() {
             let value = stacks.get_mut(change.from).unwrap().pop().unwrap();
             stacks.get_mut(change.to).unwrap().push(value);
         }
+
+        let from = stacks2.get_mut(change.from).unwrap();
+        let elements = from.drain(from.len() - change.amount..).collect::<Vec<_>>();
+        stacks2.get_mut(change.to).unwrap().extend(elements);
     }
 
     let top = stacks
@@ -78,5 +83,12 @@ fn main() {
         .map(|stack| stack.last().unwrap())
         .collect::<String>();
 
-    println!("Top elements: {}", top);
+    println!("Top 9000 elements: {}", top);
+
+    let top = stacks2
+        .iter()
+        .map(|stack| stack.last().unwrap())
+        .collect::<String>();
+
+    println!("Top 9001 elements: {}", top);
 }
