@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 enum Hand {
     Rock = 1,
     Paper = 2,
