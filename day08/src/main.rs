@@ -81,6 +81,53 @@ impl Grid {
 
         visible
     }
+
+    fn get_highest_score(&self) -> u32 {
+        let mut highest = 0;
+
+        for (i, line) in self.grid.iter().enumerate() {
+            for (j, tree) in line.iter().enumerate() {
+                let mut left = 0;
+                for prev in line[..j].iter().rev() {
+                    left += 1;
+                    if prev.height >= tree.height {
+                        break;
+                    }
+                }
+
+                let mut right = 0;
+                for next in line[j + 1..].iter() {
+                    right += 1;
+                    if next.height >= tree.height {
+                        break;
+                    }
+                }
+
+                let mut up = 0;
+                for prev in self.grid[..i].iter().rev().map(|line| &line[j]) {
+                    up += 1;
+                    if prev.height >= tree.height {
+                        break;
+                    }
+                }
+
+                let mut down = 0;
+                for next in self.grid[i + 1..].iter().map(|line| &line[j]) {
+                    down += 1;
+                    if next.height >= tree.height {
+                        break;
+                    }
+                }
+
+                let score = [left, right, up, down].iter().product();
+                if score > highest {
+                    highest = score;
+                }
+            }
+        }
+
+        highest
+    }
 }
 
 fn main() {
@@ -88,4 +135,6 @@ fn main() {
     let grid = Grid::from(reader);
 
     println!("Visible: {}", grid.get_visible_trees().len());
+
+    println!("Highest Score: {}", grid.get_highest_score());
 }
