@@ -4,21 +4,25 @@ use common::{read_input, read_lines};
 
 struct Rope {
     head: (i16, i16),
-    tail: (i16, i16),
+    knots: Vec<(i16, i16)>,
     tail_positions: HashSet<(i16, i16)>,
 }
 
 impl Rope {
-    fn new() -> Self {
-        let mut rope = Self {
+    fn new(length: u8) -> Self {
+        let mut set = HashSet::new();
+        set.insert((0, 0));
+
+        let mut knots = Vec::with_capacity((length - 1).into());
+        for _ in 0..length - 1 {
+            knots.push((0, 0));
+        }
+
+        Self {
             head: (0, 0),
-            tail: (0, 0),
-            tail_positions: HashSet::new(),
-        };
-
-        rope.tail_positions.insert(rope.tail);
-
-        rope
+            knots,
+            tail_positions: set,
+        }
     }
 
     fn move_head(&mut self, m: &Move) {
@@ -34,26 +38,35 @@ impl Rope {
         while steps > 0 {
             self.head.0 += vector.0;
             self.head.1 += vector.1;
-            self.move_tail();
+
+            let mut parent = &self.head;
+            let length = self.knots.len();
+
+            for (i, knot) in self.knots.iter_mut().enumerate() {
+                Rope::pull_knots(&parent, knot);
+                parent = knot;
+                if i == length - 1 {
+                    self.tail_positions.insert(*knot);
+                }
+            }
+
             steps -= 1;
         }
     }
 
-    fn move_tail(&mut self) {
-        let diff = (self.head.0 - self.tail.0, self.head.1 - self.tail.1);
+    fn pull_knots(parent: &(i16, i16), knot: &mut (i16, i16)) {
+        let diff = (parent.0 - knot.0, parent.1 - knot.1);
         if diff.0.abs() < 2 && diff.1.abs() < 2 {
             return;
         }
 
         if diff.0 != 0 {
-            self.tail.0 += diff.0 / diff.0.abs();
+            knot.0 += diff.0 / diff.0.abs();
         }
 
         if diff.1 != 0 {
-            self.tail.1 += diff.1 / diff.1.abs();
+            knot.1 += diff.1 / diff.1.abs();
         }
-
-        self.tail_positions.insert(self.tail);
     }
 }
 
@@ -96,12 +109,18 @@ fn main() {
     let reader = read_input(env!("CARGO_CRATE_NAME"));
     let lines = read_lines(reader);
 
-    let mut rope = Rope::new();
+    let mut rope = Rope::new(2);
+    let mut long_rope = Rope::new(10);
 
     for line in lines {
         let m = Move::from(line.as_str());
         rope.move_head(&m);
+        long_rope.move_head(&m);
     }
 
     println!("Tail has been in {} positions", rope.tail_positions.len());
+    println!(
+        "Long rope's tail has been in {} positions",
+        long_rope.tail_positions.len()
+    );
 }
