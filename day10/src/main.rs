@@ -36,12 +36,19 @@ fn main() {
     let mut register = 1;
     let mut signal_strengths = Vec::with_capacity(check_cycles.len());
     let mut add = 0;
+    let mut crt: Vec<char> = Vec::with_capacity(240);
 
     loop {
         cycle += 1;
 
         if check_cycles.contains(&cycle) {
             signal_strengths.push(register * cycle);
+        }
+
+        if register >= (cycle % 40) - 2 && register <= cycle % 40 {
+            crt.push('#');
+        } else {
+            crt.push('.');
         }
 
         if cycle_duration > 0 {
@@ -72,4 +79,12 @@ fn main() {
         "Signal strength sum: {}",
         signal_strengths.iter().sum::<i32>()
     );
+
+    let output = crt
+        .chunks(40)
+        .map(|chunk| chunk.iter().collect::<String>())
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    println!("CRT:\n{}", output);
 }
